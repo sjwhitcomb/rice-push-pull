@@ -5,19 +5,6 @@ library(dplyr)
 
 ## functions ----
 
-# convert umol/g DW --> g/kg DW
-convert1 <- function (umol, MW) {
-  umol*MW/10^3
-}
-
-
-# convert g/kg DW --> umol/g DW
-convert2 <- function (g, MW) {
-  g/MW*10^3
-}
-
-
-
 # seed.univscatter() to create univariate scatter plot OBJECT
 # for SEED soluble and protein-incorporated DATA
 # df = df
@@ -83,9 +70,19 @@ seed.univscatter4 <- function (df, varY, varGroup, varColor, varShape, metN, typ
 }
 
 
+mean_ci95 <- function(x) {
+  n <- sum(!is.na(x))
+  se <- sd(x)/sqrt(n)
+  me <- se*qt(0.975, n-1)
+  m <- mean(x)
+  ymin <- m-me
+  ymax <- m+me
+  return(c(y=m,ymin=ymin,ymax=ymax))
+}
+
 
 ## data ------
-all <- read.delim("Exp summary for msPrep.txt", header = TRUE)
+all <- read.delim("allData_PushPull.txt", header = TRUE)
 
 ## order factor levels ------
 
@@ -164,6 +161,8 @@ mcTot <- all[is.na(all$Met.total_seed_mature) == 0 | is.na(all$Cys.total_seed_ma
 
 #total_seed_mature units: g / kg DW
 #totalMolarDensity_seed_mature units: umol/ g DW
+
+source("unit conversion functions.R")
 mcTot <- mcTot %>%
   mutate(Met.totalMolarDensity_seed_mature = convert2(Met.total_seed_mature, 149.2))
 mcTot <- mcTot %>%
@@ -184,8 +183,6 @@ table(mcTot.setSpp$lineSimple)
 mcTot.setCpp <- mcTot %>%
   filter(lineSimple %in% c("WT", "CGS", "SSA", "CGS_SSA"))
 table(mcTot.setCpp$lineSimple)
-
-
 
 
 ## graphs ------
@@ -238,7 +235,21 @@ png("usp_Met.total_seed_setCpp_lineSimple.group.png", height = 600, width = 350)
 seed.univscatter2(mcTot.setCpp, mcTot.setCpp$Met.total_seed_mature, mcTot.setCpp$lineSimple, "Met", "total", "g kg-1 DW", 0.1, 0.05)
 dev.off()
 
-#-
+# total Met in mature seeds
+# SAT push pull set ONLY
+# group by lineSimple
+# with 95% confidence interval for the mean
+usp <- seed.univscatter2(mcTot.setSpp, mcTot.setSpp$Met.total_seed_mature, mcTot.setSpp$lineSimple, "Met", "total", "g kg-1 DW", 0.1, 0.05)
+usp + stat_summary(fun.data = mean_ci95, geom = "errorbar", width = 0.25, color = "red", size = 0.75)
+ggsave("usp_Met.total_seed_setSpp_lineSimple.group_95CI.png", height = 5, width = 3.5, units = "in")
+
+# total Met in mature seeds
+# CGS push pull set ONLY
+# group by lineSimple
+# with 95% confidence interval for the mean
+usp <- seed.univscatter2(mcTot.setCpp, mcTot.setCpp$Met.total_seed_mature, mcTot.setCpp$lineSimple, "Met", "total", "g kg-1 DW", 0.1, 0.05)
+usp + stat_summary(fun.data = mean_ci95, geom = "errorbar", width = 0.25, color = "red", size = 0.75)
+ggsave("usp_Met.total_seed_setCpp_lineSimple.group_95CI.png", height = 5, width = 3.5, units = "in")
 
 
 # total Cys in mature seeds
@@ -290,6 +301,22 @@ seed.univscatter2(mcTot.setCpp, mcTot.setCpp$Cys.total_seed_mature, mcTot.setCpp
 dev.off()
 
 
+# total Cys in mature seeds
+# SAT push pull set ONLY
+# group by lineSimple
+# with 95% confidence interval for the mean
+usp <- seed.univscatter2(mcTot.setSpp, mcTot.setSpp$Cys.total_seed_mature, mcTot.setSpp$lineSimple, "Cys", "total", "g kg-1 DW", 0.1, 0.05)
+usp + stat_summary(fun.data = mean_ci95, geom = "errorbar", width = 0.25, color = "red", size = 0.75)
+ggsave("usp_Cys.total_seed_setSpp_lineSimple.group_95CI.png", height = 5, width = 3.5, units = "in")
+
+# total Cys in mature seeds
+# CGS push pull set ONLY
+# group by lineSimple
+# with 95% confidence interval for the mean
+usp <- seed.univscatter2(mcTot.setCpp, mcTot.setCpp$Cys.total_seed_mature, mcTot.setCpp$lineSimple, "Cys", "total", "g kg-1 DW", 0.1, 0.05)
+usp + stat_summary(fun.data = mean_ci95, geom = "errorbar", width = 0.25, color = "red", size = 0.75)
+ggsave("usp_Cys.total_seed_setCpp_lineSimple.group_95CI.png", height = 5, width = 3.5, units = "in")
+
 # --
 # total Met + Cys in mature seeds
 # group by lineSimple
@@ -340,7 +367,21 @@ png("usp_MetCys.totalMolarDensity_seed_setCpp_lineSimple.group.png", height = 60
 seed.univscatter2(mcTot.setCpp, mcTot.setCpp$MetCys.totalMolarDensity, mcTot.setCpp$lineSimple, "Met + Cys", "total", "umol g-1 DW", 0.1, 0.05)
 dev.off()
 
+# total Met + Cys in mature seeds
+# SAT push pull set ONLY
+# group by lineSimple
+# with 95% confidence interval for the mean
+usp <- seed.univscatter2(mcTot.setSpp, mcTot.setSpp$MetCys.totalMolarDensity, mcTot.setSpp$lineSimple, "Met + Cys", "total", "umol g-1 DW", 0.1, 0.05)
+usp + stat_summary(fun.data = mean_ci95, geom = "errorbar", width = 0.25, color = "red", size = 0.75)
+ggsave("usp_MetCys.totalMolarDensity_seed_setSpp_lineSimple.group_95CI.png", height = 5, width = 3.5, units = "in")
 
+# total Met + Cys in mature seeds
+# CGS push pull set ONLY
+# group by lineSimple
+# with 95% confidence interval for the mean
+usp <- seed.univscatter2(mcTot.setCpp, mcTot.setCpp$MetCys.totalMolarDensity, mcTot.setCpp$lineSimple, "Met + Cys", "total", "umol g-1 DW", 0.1, 0.05)
+usp + stat_summary(fun.data = mean_ci95, geom = "errorbar", width = 0.25, color = "red", size = 0.75)
+ggsave("usp_MetCys.totalMolarDensity_seed_setCpp_lineSimple.group_95CI.png", height = 5, width = 3.5, units = "in")
 
 
 # calculate mid-parent heterosis for total seed Methioine ---------------
